@@ -37,3 +37,9 @@ class SaleService:
 
     async def get_today_stats(self) -> dict:
         return await self.repo.get_today_stats()
+
+    async def get_monthly_stats(self) -> dict:
+        return await self.repo.get_monthly_stats()
+
+    async def get_yearly_stats(self) -> dict:
+        return await self.repo.get_yearly_stats()

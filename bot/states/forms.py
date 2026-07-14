@@ -1,6 +1,16 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
+class AuthForm(StatesGroup):
+    waiting_password = State()
+
+
+class ChangePasswordForm(StatesGroup):
+    current_password = State()
+    new_password = State()
+    confirm_password = State()
+
+
 class ProductForm(StatesGroup):
     name = State()
     price = State()

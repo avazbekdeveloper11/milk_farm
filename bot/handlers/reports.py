@@ -17,7 +17,7 @@ async def show_today_report(callback: CallbackQuery):
 
     if stats["count"] == 0:
         await callback.message.edit_text(
-            "📈 <b>Bugungi savdo hisoboti</b>\n\n"
+            "📈 <b>Kunlik savdo hisoboti</b>\n\n"
             "Bugun hali savdo amalga oshirilmagan.",
             reply_markup=reports_menu(),
             parse_mode="HTML",
@@ -27,7 +27,65 @@ async def show_today_report(callback: CallbackQuery):
     profit_rate = (stats["paid"] / stats["total"] * 100) if stats["total"] > 0 else 0
 
     await callback.message.edit_text(
-        f"📈 <b>Bugungi savdo hisoboti</b>\n\n"
+        f"📈 <b>Kunlik savdo hisoboti</b>\n\n"
+        f"🛒 Savdolar soni: {stats['count']}\n"
+        f"💰 Jami summa: {int(stats['total']):,} so'm\n"
+        f"💵 Naqd to'langan: {int(stats['paid']):,} so'm\n"
+        f"💳 Qarzga berilgan: {int(stats['debt']):,} so'm\n\n"
+        f"📊 To'lov ulushi: {profit_rate:.1f}%",
+        reply_markup=reports_menu(),
+        parse_mode="HTML",
+    )
+
+
+@router.callback_query(F.data == "report_monthly")
+async def show_monthly_report(callback: CallbackQuery):
+    async with async_session() as session:
+        service = SaleService(session)
+        stats = await service.get_monthly_stats()
+
+    if stats["count"] == 0:
+        await callback.message.edit_text(
+            "📅 <b>Oylik savdo hisoboti</b>\n\n"
+            "Bu oyda hali savdo amalga oshirilmagan.",
+            reply_markup=reports_menu(),
+            parse_mode="HTML",
+        )
+        return
+
+    profit_rate = (stats["paid"] / stats["total"] * 100) if stats["total"] > 0 else 0
+
+    await callback.message.edit_text(
+        f"📅 <b>Oylik savdo hisoboti</b>\n\n"
+        f"🛒 Savdolar soni: {stats['count']}\n"
+        f"💰 Jami summa: {int(stats['total']):,} so'm\n"
+        f"💵 Naqd to'langan: {int(stats['paid']):,} so'm\n"
+        f"💳 Qarzga berilgan: {int(stats['debt']):,} so'm\n\n"
+        f"📊 To'lov ulushi: {profit_rate:.1f}%",
+        reply_markup=reports_menu(),
+        parse_mode="HTML",
+    )
+
+
+@router.callback_query(F.data == "report_yearly")
+async def show_yearly_report(callback: CallbackQuery):
+    async with async_session() as session:
+        service = SaleService(session)
+        stats = await service.get_yearly_stats()
+
+    if stats["count"] == 0:
+        await callback.message.edit_text(
+            "📆 <b>Yillik savdo hisoboti</b>\n\n"
+            "Bu yilda hali savdo amalga oshirilmagan.",
+            reply_markup=reports_menu(),
+            parse_mode="HTML",
+        )
+        return
+
+    profit_rate = (stats["paid"] / stats["total"] * 100) if stats["total"] > 0 else 0
+
+    await callback.message.edit_text(
+        f"📆 <b>Yillik savdo hisoboti</b>\n\n"
         f"🛒 Savdolar soni: {stats['count']}\n"
         f"💰 Jami summa: {int(stats['total']):,} so'm\n"
         f"💵 Naqd to'langan: {int(stats['paid']):,} so'm\n"

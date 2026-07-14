@@ -8,6 +8,7 @@ from aiogram.exceptions import TelegramServerError
 from bot.config import settings
 from bot.database.session import engine
 from bot.handlers import setup_routers
+from bot.middlewares import AuthMiddleware
 from bot.models import Base
 
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +28,10 @@ async def main():
     bot = Bot(token=settings.bot_token)
     dp = Dispatcher(storage=MemoryStorage())
 
-    dp.include_router(setup_routers())
+    router = setup_routers()
+    router.message.middleware(AuthMiddleware())
+    router.callback_query.middleware(AuthMiddleware())
+    dp.include_router(router)
 
     await on_startup()
 

@@ -13,9 +13,17 @@ def main_menu() -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text="📦 Mahsulotlar"), KeyboardButton(text="👥 Mijozlar")],
         [KeyboardButton(text="🛒 Savdo"), KeyboardButton(text="💰 To'lov")],
-        [KeyboardButton(text="📊 Hisobotlar")],
+        [KeyboardButton(text="📊 Hisobotlar"), KeyboardButton(text="⚙️ Sozlamalar")],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
+
+def settings_menu() -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(text="🔐 Parolni o'zgartirish", callback_data="change_password")],
+        [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_main")],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def products_menu() -> InlineKeyboardMarkup:
@@ -39,7 +47,9 @@ def customers_menu() -> InlineKeyboardMarkup:
 
 def reports_menu() -> InlineKeyboardMarkup:
     buttons = [
-        [InlineKeyboardButton(text="📈 Bugungi savdo", callback_data="report_today")],
+        [InlineKeyboardButton(text="📈 Kunlik savdo", callback_data="report_today")],
+        [InlineKeyboardButton(text="📅 Oylik savdo", callback_data="report_monthly")],
+        [InlineKeyboardButton(text="📆 Yillik savdo", callback_data="report_yearly")],
         [InlineKeyboardButton(text="💳 Qarzlar ro'yxati", callback_data="report_debts")],
         [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_main")],
     ]

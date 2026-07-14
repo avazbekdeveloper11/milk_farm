@@ -79,3 +79,46 @@ class SaleRepository(BaseRepository[Sale]):
             )
         )
         return float(result.scalar())
+
+    async def get_monthly_stats(self) -> dict:
+        today = date.today()
+        first_day = today.replace(day=1)
+        if today.month == 12:
+            next_month = today.replace(year=today.year + 1, month=1, day=1)
+        else:
+            next_month = today.replace(month=today.month + 1, day=1)
+        result = await self.session.execute(
+            select(
+                func.count(Sale.id).label("count"),
+                func.coalesce(func.sum(Sale.total_amount), 0).label("total"),
+                func.coalesce(func.sum(Sale.paid_amount), 0).label("paid"),
+                func.coalesce(func.sum(Sale.debt_amount), 0).label("debt"),
+            ).where(Sale.created_at >= first_day, Sale.created_at < next_month)
+        )
+        row = result.one()
+        return {
+            "count": row.count,
+            "total": float(row.total),
+            "paid": float(row.paid),
+            "debt": float(row.debt),
+        }
+
+    async def get_yearly_stats(self) -> dict:
+        today = date.today()
+        first_day = today.replace(month=1, day=1)
+        next_year = today.replace(year=today.year + 1, month=1, day=1)
+        result = await self.session.execute(
+            select(
+                func.count(Sale.id).label("count"),
+                func.coalesce(func.sum(Sale.total_amount), 0).label("total"),
+                func.coalesce(func.sum(Sale.paid_amount), 0).label("paid"),
+                func.coalesce(func.sum(Sale.debt_amount), 0).label("debt"),
+            ).where(Sale.created_at >= first_day, Sale.created_at < next_year)
+        )
+        row = result.one()
+        return {
+            "count": row.count,
+            "total": float(row.total),
+            "paid": float(row.paid),
+            "debt": float(row.debt),
+        }
