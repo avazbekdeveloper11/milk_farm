@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from bot.models.payment import Payment
 from bot.models.sale import Sale, SaleItem
 from bot.repositories.base import BaseRepository
 
@@ -56,7 +57,8 @@ class SaleRepository(BaseRepository[Sale]):
     async def get_today_stats(self) -> dict:
         today = date.today()
         tomorrow = today + timedelta(days=1)
-        result = await self.session.execute(
+
+        sale_result = await self.session.execute(
             select(
                 func.count(Sale.id).label("count"),
                 func.coalesce(func.sum(Sale.total_amount), 0).label("total"),
@@ -64,12 +66,23 @@ class SaleRepository(BaseRepository[Sale]):
                 func.coalesce(func.sum(Sale.debt_amount), 0).label("debt"),
             ).where(Sale.created_at >= today, Sale.created_at < tomorrow)
         )
-        row = result.one()
+        sale_row = sale_result.one()
+
+        payment_result = await self.session.execute(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.created_at >= today, Payment.created_at < tomorrow
+            )
+        )
+        payments_today = float(payment_result.scalar())
+
+        total_paid = float(sale_row.paid) + payments_today
+        actual_debt = float(sale_row.debt) - payments_today
+
         return {
-            "count": row.count,
-            "total": float(row.total),
-            "paid": float(row.paid),
-            "debt": float(row.debt),
+            "count": sale_row.count,
+            "total": float(sale_row.total),
+            "paid": total_paid,
+            "debt": max(0, actual_debt),
         }
 
     async def get_customer_total_debt(self, customer_id: int) -> float:
@@ -87,7 +100,8 @@ class SaleRepository(BaseRepository[Sale]):
             next_month = today.replace(year=today.year + 1, month=1, day=1)
         else:
             next_month = today.replace(month=today.month + 1, day=1)
-        result = await self.session.execute(
+
+        sale_result = await self.session.execute(
             select(
                 func.count(Sale.id).label("count"),
                 func.coalesce(func.sum(Sale.total_amount), 0).label("total"),
@@ -95,19 +109,31 @@ class SaleRepository(BaseRepository[Sale]):
                 func.coalesce(func.sum(Sale.debt_amount), 0).label("debt"),
             ).where(Sale.created_at >= first_day, Sale.created_at < next_month)
         )
-        row = result.one()
+        sale_row = sale_result.one()
+
+        payment_result = await self.session.execute(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.created_at >= first_day, Payment.created_at < next_month
+            )
+        )
+        payments_month = float(payment_result.scalar())
+
+        total_paid = float(sale_row.paid) + payments_month
+        actual_debt = float(sale_row.debt) - payments_month
+
         return {
-            "count": row.count,
-            "total": float(row.total),
-            "paid": float(row.paid),
-            "debt": float(row.debt),
+            "count": sale_row.count,
+            "total": float(sale_row.total),
+            "paid": total_paid,
+            "debt": max(0, actual_debt),
         }
 
     async def get_yearly_stats(self) -> dict:
         today = date.today()
         first_day = today.replace(month=1, day=1)
         next_year = today.replace(year=today.year + 1, month=1, day=1)
-        result = await self.session.execute(
+
+        sale_result = await self.session.execute(
             select(
                 func.count(Sale.id).label("count"),
                 func.coalesce(func.sum(Sale.total_amount), 0).label("total"),
@@ -115,10 +141,21 @@ class SaleRepository(BaseRepository[Sale]):
                 func.coalesce(func.sum(Sale.debt_amount), 0).label("debt"),
             ).where(Sale.created_at >= first_day, Sale.created_at < next_year)
         )
-        row = result.one()
+        sale_row = sale_result.one()
+
+        payment_result = await self.session.execute(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.created_at >= first_day, Payment.created_at < next_year
+            )
+        )
+        payments_year = float(payment_result.scalar())
+
+        total_paid = float(sale_row.paid) + payments_year
+        actual_debt = float(sale_row.debt) - payments_year
+
         return {
-            "count": row.count,
-            "total": float(row.total),
-            "paid": float(row.paid),
-            "debt": float(row.debt),
+            "count": sale_row.count,
+            "total": float(sale_row.total),
+            "paid": total_paid,
+            "debt": max(0, actual_debt),
         }
